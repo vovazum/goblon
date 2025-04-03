@@ -1,0 +1,17 @@
+version: 1.0.{build}
+image: Ubuntu
+install:
+  - curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+  - echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+  - sudo apt-get update && sudo apt-get install yarn
+  - yarn install
+build_script:
+  - yarn build
+artifacts:
+  - path: dist
+    name: dist
+deploy:
+  provider: GitHub
+  artifact: dist
+  on:
+    branch: main
