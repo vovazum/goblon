@@ -1,12 +1,11 @@
 import Game from './classes/Game.js';
 import './styles/main.css';
+import hammerImg from './images/hammer.png';
+import goblinImg from './images/goblin.png';
 
-const game = new Game();
-game.init();
-
-// Обработка кликов по полю
-document.querySelector('.field-container').addEventListener('click', (e) => {
-  if (e.target.classList.contains('goblin')) {
-    game.hit();
-  }
+const game = new Game({
+  goblinImage: goblinImg,
+  hammerImage: hammerImg
 });
+
+game.init();
