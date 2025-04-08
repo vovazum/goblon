@@ -3,8 +3,11 @@ export default class Game {
     this.goblinImage = goblinImage;
     this.hammerImage = hammerImage;
     this.field = this.createField();
-    this.score = this.createScore();
     this.cursor = this.createCursor();
+    this.scoreElement = null;
+    this.points = 0;
+    this.hits = 0; // Счётчик успешных попаданий
+    this.maxHits = 10; // Лимит ударов
     this.misses = 0;
     this.maxMisses = 5;
     this.interval = null;
@@ -19,12 +22,12 @@ export default class Game {
   setupDOM() {
     this.field.drawField();
     this.cursor.setCursor();
-    this.score.display();
+    this.updateScore();
   }
 
   setupEventListeners() {
     document.querySelector('.field-container').addEventListener('click', (e) => {
-      if (e.target.classList.contains('goblin')) {
+      if (e.target.classList.contains('goblin') && this.hits < this.maxHits) {
         this.hit();
         this.cursor.hitAnimation();
       }
@@ -49,26 +52,13 @@ export default class Game {
     };
   }
 
-  createScore() {
-    return {
-      points: 0,
-      display: () => {
-        const scoreElement = document.querySelector('.score');
-        if (!scoreElement) {
-          const score = document.createElement('div');
-          score.className = 'score';
-          document.body.prepend(score);
-        }
-        this.updateScore();
-      },
-      increase: () => {
-        this.points++;
-        this.updateScore();
-      },
-      updateScore: () => {
-        document.querySelector('.score').textContent = `Score: ${this.points}`;
-      }
-    };
+  updateScore() {
+    if (!this.scoreElement) {
+      this.scoreElement = document.createElement('div');
+      this.scoreElement.className = 'score';
+      document.body.prepend(this.scoreElement);
+    }
+    this.scoreElement.textContent = `Score: ${this.points} (${this.hits}/${this.maxHits} hits left)`;
   }
 
   createCursor() {
@@ -95,6 +85,10 @@ export default class Game {
   }
 
   showGoblin() {
+    if (this.hits >= this.maxHits || this.misses >= this.maxMisses) {
+      return; // Прекращаем игру если достигли лимита
+    }
+
     const cell = this.field.getRandomCell();
     const goblin = document.createElement('img');
     goblin.src = this.goblinImage;
@@ -116,20 +110,31 @@ export default class Game {
   }
 
   hit() {
-    this.score.increase();
+    if (this.hits >= this.maxHits) return;
+    
+    this.hits++;
+    this.points += 10; // Начисляем 10 очков за попадание
+    this.updateScore();
     document.querySelector('.goblin')?.remove();
+
+    if (this.hits >= this.maxHits) {
+      this.endGame(true); // Победа
+    }
   }
 
   miss() {
     this.misses++;
     if (this.misses >= this.maxMisses) {
-      this.endGame();
+      this.endGame(false); // Проигрыш
     }
   }
 
-  endGame() {
+  endGame(isWin) {
     clearInterval(this.interval);
-    alert(`Game over! Your score: ${this.score.points}`);
+    const message = isWin 
+      ? `Вы выиграли! Окончательный счет: ${this.points}` 
+      : `Игра окончена! Ваш результат: ${this.points}`;
+    alert(message);
     setTimeout(() => {
       window.location.reload();
     }, 1000);
